@@ -123,8 +123,8 @@ population_constraint = within_percent_of_ideal_population(initial_partition, po
 compactness_constraint = no_worse_L_minus_1_polsby_popper
 
 validator = Validator([no_vanishing_districts,
-                       single_flip_contiguous, population_constraint])
-#                       compactness_constraint])
+                       single_flip_contiguous, population_constraint,
+                       compactness_constraint])
 
 # Add cyclic updaters :(
 # updaters['metagraph_degree'] = MetagraphDegree(validator, "metagraph_degree")
