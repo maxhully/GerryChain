@@ -1,0 +1,30 @@
+{
+  "Mean-Median": {
+    "name": "Mean-Median",
+    "initial_plan_score": 0.045911149522572525,
+    "fraction_as_high": 1e-6,
+    "p_value": 0.001414213562373095,
+    "opposite_p_value": 1.414212855266137
+  },
+  "Mean-Thirdian": {
+    "name": "Mean-Thirdian",
+    "initial_plan_score": 0.14786534904195048,
+    "fraction_as_high": 0.855329,
+    "p_value": 1.3079212514520895,
+    "opposite_p_value": 0.537905196108013
+  },
+  "Efficiency Gap": {
+    "name": "Efficiency Gap",
+    "initial_plan_score": 0.2574948904727869,
+    "fraction_as_high": 0.002404,
+    "p_value": 0.06933974329343887,
+    "opposite_p_value": 1.4125126548105684
+  },
+  "L1 Reciprocal Polsby-Popper": {
+    "name": "L1 Reciprocal Polsby-Popper",
+    "initial_plan_score": 64.50797267981702,
+    "fraction_as_high": 1.0,
+    "p_value": 1.4142135623730951,
+    "opposite_p_value": 0.0
+  }
+}

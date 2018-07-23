@@ -1,8 +1,6 @@
 # Imports for I/O processing
 
 import json
-import geopandas as gp
-from networkx.readwrite import json_graph
 import functools
 
 
@@ -13,8 +11,6 @@ import functools
 from rundmcmc.accept import always_accept
 
 from rundmcmc.chain import MarkovChain
-
-from rundmcmc.make_graph import (add_data_to_graph, construct_graph)
 
 from rundmcmc.partition import Partition
 
@@ -27,16 +23,15 @@ from rundmcmc.updaters import (Tally, boundary_nodes, cut_edges,
                                interior_boundaries)
 
 from rundmcmc.validity import (L1_reciprocal_polsby_popper,
-                               UpperBound,
                                Validator, no_vanishing_districts,
-                               no_worse_L_minus_1_polsby_popper,
+                               UpperBound,
                                single_flip_contiguous,
                                within_percent_of_ideal_population)
 
 from rundmcmc.scores import (efficiency_gap, mean_median,
                              mean_thirdian)
 
-from rundmcmc.output import p_value_report, pipe_to_table, ChainOutputTable
+from rundmcmc.output import p_value_report, pipe_to_table
 
 from rundmcmc.output.vis_output import (hist_of_table_scores, trace_of_table_scores)
 
@@ -51,7 +46,7 @@ graph = Graph.load('C:/dev/gerrydb/pennsylvania/PA_rook.json').graph
 # Names of graph columns go here
 pop_col = "population"
 area_col = "area"
-district_col = "2011"
+district_col = "TS_4_1"
 
 
 # This builds a graph
@@ -92,7 +87,7 @@ acceptance_method = always_accept
 
 
 # Number of steps to run
-steps = 20000
+steps = 100000
 
 print("loaded data")
 
@@ -115,16 +110,16 @@ initial_partition = Partition(graph, assignment, updaters)
 
 
 # Desired validators go here
-pop_limit = .01
+pop_limit = .02
 population_constraint = within_percent_of_ideal_population(initial_partition, pop_limit)
 
-# compactness_limit = L1_reciprocal_polsby_popper(initial_partition)
-# compactness_constraint = UpperBound(L1_reciprocal_polsby_popper, compactness_limit)
-compactness_constraint = no_worse_L_minus_1_polsby_popper
+compactness_limit = L1_reciprocal_polsby_popper(initial_partition) + 100
+compactness_constraint = UpperBound(L1_reciprocal_polsby_popper, compactness_limit)
+# compactness_constraint = no_worse_L_minus_1_polsby_popper
 
 validator = Validator([no_vanishing_districts,
-                       single_flip_contiguous, population_constraint,
-                       compactness_constraint])
+                       single_flip_contiguous, population_constraint])
+#                       compactness_constraint])
 
 # Add cyclic updaters :(
 # updaters['metagraph_degree'] = MetagraphDegree(validator, "metagraph_degree")
@@ -148,36 +143,36 @@ scores = {
 
 initial_scores = {key: score(initial_partition) for key, score in scores.items()}
 
-# table = pipe_to_table(chain, scores, display=True, number_to_display=100)
+table = pipe_to_table(chain, scores, display=True, number_to_display=100)
 
-naive_p_value_report = []
-original_score = initial_scores['Efficiency Gap']
+# naive_p_value_report = []
+# original_score = initial_scores['Efficiency Gap']
 
-table = ChainOutputTable()
+# table = ChainOutputTable()
 
-counter = 0
-for state in chain:
-    higher = efficiency_gap(state, 'T16SEND', 'T16SENR') >= original_score
-    naive_p_value_report.append(higher)
+# counter = 0
+# for state in chain:
+#     higher = efficiency_gap(state, 'T16SEND', 'T16SENR') >= original_score
+#     naive_p_value_report.append(higher)
 
-    row = {key: score(state) for key, score in scores.items()}
+#     row = {key: score(state) for key, score in scores.items()}
 
-    table.append(row)
+#     table.append(row)
 
-    if counter % 100 == 0:
-        higher_in_last_100 = len([x for x in naive_p_value_report[-100:] if x == True])
-        print(f"{higher_in_last_100} higher in last 100 steps")
+#     if counter % 100 == 0:
+#         higher_in_last_100 = len([x for x in naive_p_value_report[-100:] if x is True])
+#         print(f"{higher_in_last_100} higher in last 100 steps")
 
-    counter += 1
+#     counter += 1
 
 
-print(len([x for x in naive_p_value_report if x]), len(chain))
-print(len([x for x in table['Efficiency Gap'] if x >= original_score]), len(chain))
+# print(len([x for x in naive_p_value_report if x]), len(chain))
+# print(len([x for x in table['Efficiency Gap'] if x >= original_score]), len(chain))
 
 print("ran chain")
 
 # Histogram Plotting
-hist_path = "chain_histogram31.png"
+hist_path = "chain_histogram31-short.png"
 
 hist_of_table_scores(table, scores, outputFile=hist_path, num_bins=50)
 
@@ -185,7 +180,7 @@ print("plotted histograms")
 
 
 # Trace Plotting
-trace_path = "chain_traces31.png"
+trace_path = "chain_traces31-short.png"
 
 trace_of_table_scores(table, scores, outputFile=trace_path)
 
@@ -194,7 +189,7 @@ print("plotted traces")
 # P-value reports
 pv_dict = {key: p_value_report(key, table[key], initial_scores[key]) for key in scores}
 print(pv_dict)
-with open('pvals_report31.json', 'w') as fp:
+with open('pvals_report31-short.json', 'w') as fp:
     json.dump(pv_dict, fp)
 
 print("computed p-values")
