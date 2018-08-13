@@ -1,7 +1,10 @@
 import collections
 
-from rundmcmc.updaters import flows_from_changes, compute_edge_flows
 from rundmcmc.container import Assignment
+from rundmcmc.updaters import (boundary_nodes, compute_edge_flows,
+                               exterior_boundaries, flows_from_changes,
+                               interior_boundaries, perimeters,
+                               cut_edges, cut_edges_by_part)
 
 
 class _Partition:
@@ -81,6 +84,8 @@ class _Partition:
 # This Partition should be called UpdatingPartition,
 # and _Partition should be called just Partition.
 
+# Should we move cut_edges into what is currently called _Partition?
+
 
 class Partition(_Partition):
     def __init__(self, graph=None, assignment=None, updaters=None,
@@ -92,6 +97,7 @@ class Partition(_Partition):
         self.updaters = updaters
 
         super().__init__(graph=graph, assignment=assignment, parent=parent, flips=flips)
+
         self._update()
 
     def _update(self):
@@ -110,3 +116,25 @@ class Partition(_Partition):
         if key not in self._cache:
             self._cache[key] = self.updaters[key](self)
         return self._cache[key]
+
+
+class GeographicPartition(Partition):
+    """
+    This is a shaky implementation of this idea.
+    """
+    default_updaters = {'perimeters': perimeters,
+            'exterior_boundaries': exterior_boundaries,
+            'interior_boundaries': interior_boundaries,
+            'boundary_nodes': boundary_nodes,
+            'cut_edges': cut_edges,
+            'cut_edges_by_part': cut_edges_by_part}
+
+    def __init__(self, graph=None, assignment=None, updaters=None,
+                 parent=None, flips=None):
+        # TODO: Validate here that the graph has the right attributes
+        if updaters:
+            # Here, .update() is the dictionary method, not
+            # anything to do with our notion of updaters.
+            updaters.update(self.default_updaters)
+        super().__init__(graph=graph, assignment=assignment, updaters=updaters,
+                         parent=parent, flips=flips)
