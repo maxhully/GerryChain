@@ -4,7 +4,7 @@ from rundmcmc.updaters import flows_from_changes, compute_edge_flows
 from rundmcmc.container import Assignment
 
 
-class Partition:
+class _Partition:
     """
     Partition represents a partition of the nodes of the graph. It will perform
     the first layer of computations at each step in the Markov chain - basic
@@ -12,8 +12,7 @@ class Partition:
 
     """
 
-    def __init__(self, graph=None, assignment=None, updaters=None,
-                 parent=None, flips=None):
+    def __init__(self, graph=None, assignment=None, parent=None, flips=None):
         """
         :graph: Underlying graph; a NetworkX object.
         :assignment: Dictionary assigning nodes to districts. If None,
@@ -26,23 +25,15 @@ class Partition:
         if parent:
             self._from_parent(parent, flips)
         else:
-            self._first_time(graph, assignment, updaters)
+            self._first_time(graph, assignment)
 
-        self._update()
-
-    def _first_time(self, graph, assignment, updaters):
+    def _first_time(self, graph, assignment):
         self.graph = graph
 
         if not assignment:
             assignment = {node: 0 for node in graph.nodes}
 
         self.assignment = Assignment(assignment)
-
-        if not updaters:
-            updaters = dict()
-
-        self.updaters = updaters
-
         self.parent = None
         self.flips = None
 
@@ -53,11 +44,9 @@ class Partition:
     def _from_parent(self, parent, flips):
         self.parent = parent
         self.flips = flips
-        self.assignment = Assignment(parent.assignment, flips)
-
         self.graph = parent.graph
-        self.updaters = parent.updaters
 
+        self.assignment = Assignment(parent.assignment, flips)
         self._update_parts_and_flows()
 
     def _update_parts_and_flows(self):
@@ -89,6 +78,29 @@ class Partition:
     def crosses_parts(self, edge):
         return self.assignment[edge[0]] != self.assignment[edge[1]]
 
+# This Partition should be called UpdatingPartition,
+# and _Partition should be called just Partition.
+
+
+class Partition(_Partition):
+    def __init__(self, graph=None, assignment=None, updaters=None,
+                 parent=None, flips=None):
+        if parent:
+            updaters = parent.updaters
+        elif not updaters:
+            updaters = dict()
+        self.updaters = updaters
+
+        super().__init__(graph=graph, assignment=assignment, parent=parent, flips=flips)
+        self._update()
+
+    def _update(self):
+        self._cache = dict()
+
+        for key in self.updaters:
+            if key not in self._cache:
+                self._cache[key] = self.updaters[key](self)
+
     def __getitem__(self, key):
         """Allows keying on a Partition instance.
 
@@ -98,10 +110,3 @@ class Partition:
         if key not in self._cache:
             self._cache[key] = self.updaters[key](self)
         return self._cache[key]
-
-    def _update(self):
-        self._cache = dict()
-
-        for key in self.updaters:
-            if key not in self._cache:
-                self._cache[key] = self.updaters[key](self)

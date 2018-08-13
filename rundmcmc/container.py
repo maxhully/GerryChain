@@ -36,25 +36,3 @@ class Assignment:
                 yield self.flips[node]
             else:
                 yield part
-
-
-class UpdaterContainer:
-    def __init__(self, updaters):
-        self.updaters = updaters
-
-    def _update(self):
-        self._cache = dict()
-
-        for key in self.updaters:
-            if key not in self._cache:
-                self._cache[key] = self.updaters[key](self)
-
-    def __getitem__(self, key):
-        """Allows keying on a Partition instance.
-
-        :key: Property to access.
-
-        """
-        if key not in self._cache:
-            self._cache[key] = self.updaters[key](self)
-        return self._cache[key]
