@@ -2,6 +2,7 @@ import collections
 
 from rundmcmc.proposals import max_edge_cuts
 from rundmcmc.updaters import flows_from_changes, compute_edge_flows
+from rundmcmc.container import Assignment
 
 
 class Partition:
@@ -32,10 +33,11 @@ class Partition:
 
     def _first_time(self, graph, assignment, updaters):
         self.graph = graph
-        self.assignment = assignment
 
         if not assignment:
             assignment = {node: 0 for node in graph.nodes}
+
+        self.assignment = Assignment(assignment)
 
         if not updaters:
             updaters = dict()
@@ -47,8 +49,6 @@ class Partition:
         self.flows = None
         self.edge_flows = None
 
-        self.max_edge_cuts = max_edge_cuts(self)
-
         self.parts = collections.defaultdict(set)
         for node, part in self.assignment.items():
             self.parts[part].add(node)
@@ -56,29 +56,18 @@ class Partition:
     def _from_parent(self, parent, flips):
         self.parent = parent
         self.flips = flips
-
-        self.assignment = {**parent.assignment, **flips}
+        self.assignment = Assignment(parent.assignment, flips)
 
         self.graph = parent.graph
         self.updaters = parent.updaters
 
-        self.max_edge_cuts = parent.max_edge_cuts
-
         self._update_parts()
-
-    def __repr__(self):
-        number_of_parts = len(self)
-        s = "s" if number_of_parts > 1 else ""
-        return f"Partition of a graph into {str(number_of_parts)} part{s}"
-
-    def __len__(self):
-        return len(self.parts)
 
     def _update_parts(self):
         self.flows = flows_from_changes(self.parent.assignment, self.flips)
         self.edge_flows = compute_edge_flows(self)
 
-        # Parts must continue to be a defaultdict, so that new parts can appear.
+        # Parts must ontinue to be a defaultdict, so that new parts can appear.
         self.parts = collections.defaultdict(set, self.parent.parts)
 
         for part, flow in self.flows.items():
@@ -87,12 +76,13 @@ class Partition:
         # We do not want empty parts.
         self.parts = {part: nodes for part, nodes in self.parts.items() if len(nodes) > 0}
 
-    def _update(self):
-        self._cache = dict()
+    def __len__(self):
+        return len(self.parts)
 
-        for key in self.updaters:
-            if key not in self._cache:
-                self._cache[key] = self.updaters[key](self)
+    def __repr__(self):
+        number_of_parts = len(self)
+        s = "s" if number_of_parts > 1 else ""
+        return f"Partition of a graph into {str(number_of_parts)} part{s}"
 
     def merge(self, flips):
         """
@@ -115,3 +105,10 @@ class Partition:
         if key not in self._cache:
             self._cache[key] = self.updaters[key](self)
         return self._cache[key]
+
+    def _update(self):
+        self._cache = dict()
+
+        for key in self.updaters:
+            if key not in self._cache:
+                self._cache[key] = self.updaters[key](self)

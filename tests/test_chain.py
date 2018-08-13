@@ -4,6 +4,8 @@ from rundmcmc.chain import MarkovChain
 
 
 class MockState:
+    assignment = {1: 1}
+
     def merge(self, changes):
         return MockState()
 

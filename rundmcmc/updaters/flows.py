@@ -51,14 +51,12 @@ def on_flow(initializer, alias):
 
             previous = partition.parent[alias]
 
-            new_values = dict()
+            new_values = dict(previous)
 
             for part, flow in partition.flows.items():
                 new_values[part] = function(partition, previous[part], flow['in'], flow['out'])
 
-            result = {**previous, **new_values}
-
-            return result
+            return new_values
         return wrapped
     return decorator
 
