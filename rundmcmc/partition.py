@@ -1,6 +1,5 @@
 import collections
 
-from rundmcmc.proposals import max_edge_cuts
 from rundmcmc.updaters import flows_from_changes, compute_edge_flows
 from rundmcmc.container import Assignment
 
@@ -61,20 +60,16 @@ class Partition:
         self.graph = parent.graph
         self.updaters = parent.updaters
 
-        self._update_parts()
+        self._update_parts_and_flows()
 
-    def _update_parts(self):
+    def _update_parts_and_flows(self):
         self.flows = flows_from_changes(self.parent.assignment, self.flips)
         self.edge_flows = compute_edge_flows(self)
 
-        # Parts must ontinue to be a defaultdict, so that new parts can appear.
-        self.parts = collections.defaultdict(set, self.parent.parts)
+        self.parts = dict(self.parent.parts)
 
         for part, flow in self.flows.items():
             self.parts[part] = (self.parent.parts[part] | flow['in']) - flow['out']
-
-        # We do not want empty parts.
-        self.parts = {part: nodes for part, nodes in self.parts.items() if len(nodes) > 0}
 
     def __len__(self):
         return len(self.parts)
