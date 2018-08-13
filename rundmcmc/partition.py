@@ -45,8 +45,6 @@ class Partition:
 
         self.parent = None
         self.flips = None
-        self.flows = None
-        self.edge_flows = None
 
         self.parts = collections.defaultdict(set)
         for node, part in self.assignment.items():
