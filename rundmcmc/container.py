@@ -1,38 +1,28 @@
-class Assignment:
+from collections import ChainMap
+
+
+class Assignment(ChainMap):
     def __init__(self, assignment, flips=None):
-        if isinstance(assignment, Assignment):
-            self._assignment = assignment.commit_flips()
+        if isinstance(assignment, ChainMap):
+            _assignment = assignment.commit_flips()
         else:
-            self._assignment = assignment
+            _assignment = assignment
 
         if not flips:
             flips = dict()
-        self.flips = flips
 
-    def __getitem__(self, node):
-        if node in self.flips:
-            return self.flips[node]
-        else:
-            return self._assignment[node]
+        super().__init__(flips, _assignment)
 
     def commit_flips(self):
-        for node, part in self.flips.items():
-            self._assignment[node] = part
-        return self._assignment
+        """Record the proposed flips in the old assignment, and
+        then return this updated version. This mutates assignment in place,
+        in order to avoid the assignment becoming a giant tower of ChainMaps
+        as the chain runs.
+        """
+        flips = self.maps[0]
+        assignment = self.maps[1]
 
-    def items(self):
-        for node, part in self._assignment.items():
-            if node in self.flips:
-                yield (node, self.flips[node])
-            else:
-                yield (node, part)
+        for node, part in flips.items():
+            assignment[node] = part
 
-    def keys(self):
-        return self._assignment.keys()
-
-    def values(self):
-        for node, part in self._assignment.items():
-            if node in self.flips:
-                yield self.flips[node]
-            else:
-                yield part
+        return assignment
