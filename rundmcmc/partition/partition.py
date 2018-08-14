@@ -37,26 +37,20 @@ class Partition:
         self.parent = None
         self.flips = None
 
-        self.parts = collections.defaultdict(set)
-        for node, part in self.assignment.items():
-            self.parts[part].add(node)
+        self.parts = get_parts_from_assignment(assignment)
 
     def _from_parent(self, parent, flips):
         self.parent = parent
+        self.assignment = Assignment(parent.assignment, flips)
         self.flips = flips
         self.graph = parent.graph
 
-        self.assignment = Assignment(parent.assignment, flips)
         self._update_parts_and_flows()
 
     def _update_parts_and_flows(self):
         self.flows = flows_from_changes(self.parent.assignment, self.flips)
         self.edge_flows = compute_edge_flows(self)
-
-        self.parts = dict(self.parent.parts)
-
-        for part, flow in self.flows.items():
-            self.parts[part] = (self.parent.parts[part] | flow['in']) - flow['out']
+        self.parts = update_parts_from_flows(self.parent.assignment, self.flows)
 
     def __len__(self):
         return len(self.parts)
@@ -77,3 +71,19 @@ class Partition:
 
     def crosses_parts(self, edge):
         return self.assignment[edge[0]] != self.assignment[edge[1]]
+
+
+def get_parts_from_assignment(assignment):
+    parts = collections.defaultdict(set)
+    for node, part in assignment.items():
+        parts[part].add(node)
+    return parts
+
+
+def update_parts_from_flows(old_parts, flows):
+    parts = dict(old_parts)
+
+    for part, flow in flows.items():
+        parts[part] = (old_parts[part] | flow['in']) - flow['out']
+
+    return parts
