@@ -1,6 +1,5 @@
 import collections
 
-from .assignment import Assignment
 from ..updaters import compute_edge_flows, flows_from_changes
 
 
@@ -30,10 +29,7 @@ class Partition:
     def _first_time(self, graph, assignment):
         self.graph = graph
 
-        if not assignment:
-            assignment = {node: 0 for node in graph.nodes}
-
-        self.assignment = Assignment(assignment)
+        self.assignment = assignment
         self.parent = None
         self.flips = None
 
@@ -46,7 +42,7 @@ class Partition:
         self.flips = flips
         self.graph = parent.graph
 
-        self.assignment = Assignment(parent.assignment, flips)
+        self.assignment = {**parent.assignment, **flips}
         self._update_parts_and_flows()
 
     def _update_parts_and_flows(self):
