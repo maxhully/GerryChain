@@ -52,25 +52,27 @@ class Election:
 class ElectionUpdater:
     def __init__(self, election):
         self.election = election
+        self.tallies = {party: DataTally(election.parties_to_columns[party], party)
+                        for party in election.parties}
 
     def __call__(self, partition):
         previous_totals_for_party = self.get_previous_values(partition)
         parties = self.election.parties
-        tallies = self.election.tallies
+        tallies = self.tallies
 
         totals_for_party = {
-            party: tallies[party](partition, previous=previous_totals_for_party[party])
-            for party in parties
+            party: tally(partition, previous=previous_totals_for_party[party])
+            for party, tally in tallies.items()
         }
 
         totals = {
-            part: sum(totals_for_party[party][part] for party in parties)
+            part: sum(totals[part] for party, totals in totals_for_party.items())
             for part in partition.parts
         }
 
         percents_for_party = {
-            party: get_percents(totals_for_party[party], totals)
-            for party in parties
+            party: get_percents(party_totals, totals)
+            for party, party_totals in totals_for_party.items()
         }
         return ElectionResults(self, totals_for_party, totals, percents_for_party)
 
