@@ -169,7 +169,7 @@ def contiguous_bfs(partition):
 
 
 def number_of_contiguous_parts(partition):
-    """Return the number of non-connected assignment subgraphs.
+    """Return the number of connected assignment subgraphs.
 
     :param partition: Instance of Partition; contains connected components.
     :return: number of contiguous districts

@@ -19,10 +19,7 @@ def str_tree(geometries):
     """
     for i in geometries.index:
         geometries[i].id = i
-    try:
-        tree = STRtree(geometries)
-    except AttributeError:
-        tree = STRtree(geometries)
+    tree = STRtree(geometries)
     return tree
 
 

@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+import pytest
+
 from gerrychain.chain import MarkovChain
 
 
@@ -86,3 +88,18 @@ def test_repr():
     )
 
     assert repr(chain) == "<MarkovChain [100 steps]>"
+
+
+def test_raises_value_error_if_initial_state_not_valid():
+    def always_fails(partition):
+        return False
+
+    with pytest.raises(ValueError):
+        MarkovChain(
+            proposal=lambda x: None,
+            constraints=[always_fails],
+            accept=lambda x: True,
+            initial_state=None,
+            total_steps=100,
+        )
+

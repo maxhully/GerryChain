@@ -121,9 +121,8 @@ class Graph(networkx.Graph):
         # explicitly told not to.
         if reproject:
             df = reprojected(dataframe)
-            if ignore_errors:
+            if not ignore_errors:
                 invalid_reproj = invalid_geometries(df)
-                print(invalid_reproj)
                 if len(invalid_reproj) > 0:
                     raise GeometryError(
                         "Invalid geometries at rows {} after "

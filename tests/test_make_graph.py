@@ -1,6 +1,6 @@
 import pathlib
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import geopandas as gp
 import pandas
@@ -10,6 +10,7 @@ from shapely.geometry import Polygon
 from gerrychain import Partition
 from gerrychain.graph import Graph
 from gerrychain.graph.geo import GeometryError
+from gerrychain.graph.adjacency import neighbors, warn_for_overlaps
 
 
 @pytest.fixture
@@ -266,3 +267,21 @@ def test_data_and_geometry(gdf_with_data):
     assert (graph.data["data"] == df["data"]).all()
     graph.add_data(df[["data2"]])
     assert list(graph.data.columns) == ["data", "data2"]
+
+
+def test_repr():
+    graph = Graph([("01", "02"), ("02", "03"), ("03", "01")])
+    assert repr(graph) == "<Graph [3 nodes, 3 edges]>"
+
+
+class TestAdjacency:
+    def test_requires_rook_or_queen(self):
+        with pytest.raises(ValueError):
+            neighbors(None, "pawn")
+
+    def test_warn_for_overlaps(self):
+        overlap = MagicMock()
+        overlap.area = 10
+        mock_intersection_pairs = [(0, {1: overlap})]
+        with pytest.warns(UserWarning):
+            list(warn_for_overlaps(mock_intersection_pairs))

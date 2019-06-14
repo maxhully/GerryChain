@@ -1,5 +1,8 @@
 from gerrychain import Partition
-from gerrychain.constraints.contiguity import contiguous_components
+from gerrychain.constraints.contiguity import (
+    contiguous_components,
+    number_of_contiguous_parts,
+)
 
 
 def test_contiguous_components(graph):
@@ -16,3 +19,8 @@ def test_contiguous_components(graph):
     }
 
     assert set(components[2][0].nodes) == {3, 4, 5}
+
+
+def test_number_of_contiguous_parts(graph):
+    partition = Partition(graph, {0: 1, 1: 1, 2: 1, 3: 2, 4: 2, 5: 2, 6: 1, 7: 1, 8: 1})
+    assert number_of_contiguous_parts(partition) == 1

@@ -109,3 +109,13 @@ def test_get_assignment_with_series():
 
 def test_repr(assignment):
     assert repr(assignment) == "<Assignment [3 keys, 2 parts]>"
+
+
+def test_make_assignment_with_node_attribute_requires_graph(assignment):
+    with pytest.raises(TypeError):
+        get_assignment("assignment")
+
+
+def test_parts_must_be_frozensets():
+    with pytest.raises(TypeError):
+        Assignment({0: [1, 2, 3], 1: [0, 5, 6]})

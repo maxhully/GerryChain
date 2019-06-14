@@ -116,10 +116,10 @@ def get_assignment(assignment, graph=None):
         return Assignment.from_dict(
             {node: graph.nodes[node][assignment] for node in graph}
         )
-    elif callable(getattr(assignment, "items", None)):
-        return Assignment.from_dict(assignment)
     elif isinstance(assignment, Assignment):
         return assignment
+    elif callable(getattr(assignment, "items", None)):
+        return Assignment.from_dict(assignment)
     else:
         raise TypeError("Assignment must be a dict or a node attribute key")
 
